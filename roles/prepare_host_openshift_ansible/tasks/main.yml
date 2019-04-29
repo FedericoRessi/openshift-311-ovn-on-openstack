@@ -1,0 +1,21 @@
+---
+- name: Ensure basic packages
+  yum: name=epel-release state=present
+
+- name: Ensure basic packages 2
+  yum:
+    name: ['ansible', 'pyOpenSSL', 'python-cryptography', 'python-lxml', 'git', 'NetworkManager']
+    state: present
+
+- name: Enable networkmanager
+  service: name=NetworkManager state=started enabled=true
+
+- name: Add hostname to hosts (workaround for rdocloud)
+  shell: |
+      if ! grep $(hostname -f) /etc/hosts;
+      then
+         IP=$(ip a | grep inet | awk ' /eth0/ { print $2 } ' | cut -d/ -f1)
+         echo $IP $(hostname -f) $(hostname -a) >> /etc/hosts
+      fi
+  changed_when: False
+

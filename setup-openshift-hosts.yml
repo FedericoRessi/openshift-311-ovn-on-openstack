@@ -1,0 +1,48 @@
+---
+- name: setup opestack resources
+  hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - include_tasks: create-net.yaml
+    - include_tasks: create-os-instances.yaml
+
+- name: setup docker and oc client
+  hosts: openshift
+  roles:
+    - docker
+    - oc_client
+    - prepare_host_openshift_ansible
+  tasks:
+    - debug: var=hostvars
+    - name: "Build hosts file"
+      lineinfile:
+        dest: "/etc/hosts"
+        line: "{{ hostvars[item].ansible_default_ipv4.address }} {{ hostvars[item].ansible_facts.nodename }}"
+        state: present
+      when: hostvars[item].ansible_default_ipv4.address is defined
+      with_items: "{{ groups.openshift }}"
+
+- name: debug
+  hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - debug: var=hosts
+    - set_fact:
+        masters: "{{ masters|default([]) + [ item ] }}"
+      with_items: "{{ hosts }}"
+      when: item.group == "master"
+
+    - set_fact:
+        workers: "{{ workers|default([]) + [ item ] }}"
+      with_items: "{{ hosts }}"
+      when: item.group == "worker"
+
+    - debug: var=workers
+    - debug: var=masters
+
+    - name: "Create openshift-ansible inventory"
+      template:
+        src: openshift-ansible-3.11-inventory.j2
+        dest: openshift-ansible-inventory
+
+

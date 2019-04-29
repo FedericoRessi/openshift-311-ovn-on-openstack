@@ -1,0 +1,17 @@
+[master]
+master ansible_ssh_host=38.145.34.212 ansible_ssh_user=centos ansible_become=true
+
+[worker]
+worker1 ansible_ssh_host=38.145.35.46 ansible_ssh_user=centos ansible_become=true
+worker2 ansible_ssh_host=38.145.32.97 ansible_ssh_user=centos ansible_become=true
+
+[openshift]
+master
+worker1
+worker2
+
+[localhost]
+127.0.0.1
+
+[all:vars]
+ssh_key=mbp-ajo

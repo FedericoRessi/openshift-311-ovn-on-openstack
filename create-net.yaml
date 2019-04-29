@@ -1,0 +1,41 @@
+---
+- name: Create networks
+  os_network:
+    name: "{{ item }}"
+    cloud: rdocloud
+  with_items:
+    - private1
+
+- name: Create subnets
+  os_subnet:
+    name: "{{ item.name }}"
+    network_name: "{{ item.name }}"
+    cidr: "{{ item.cidr }}"
+    cloud: rdocloud
+  with_items:
+     - { name: 'private1', cidr: '192.168.144.0/24'}
+
+- name: Create routers
+  os_router:
+    name: "{{ item.name }}"
+    network: 38.145.32.0/22
+    interfaces:
+      - "{{ item.network }}"
+  with_items:
+    - { name: 'router1', network: 'private1' }
+
+- name: "Setup project security groups"
+  os_security_group:
+    cloud: rdocloud
+    name: openshifts
+    description: security groups for the openshift servers
+
+- os_security_group_rule: cloud=rdocloud security_group=openshifts protocol=tcp
+                          port_range_min="{{ item }}" port_range_max="{{ item }}"
+  with_items:
+    - 80
+    - 443
+    - 22
+    - 8443
+
+- os_security_group_rule: cloud=rdocloud security_group=openshifts direction=egress
